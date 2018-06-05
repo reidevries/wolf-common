@@ -727,8 +727,18 @@ bool GraphWidgetInner::rightClick(const MouseEvent &ev)
 
     if (focusedElement == nullptr)
     {
-        if (getHoveredNode(point) != nullptr)
-            return true;
+	GraphNode* node = getHoveredNode(point);
+
+        if (node != nullptr)
+	{
+		//check if tension handle, if true, reset tension
+		GraphTensionHandle* tensionHandle = dynamic_cast<GraphTensionHandle *>(node);
+
+		if (tensionHandle != nullptr)
+			tensionHandle.reset();	
+		else
+			return true;
+	}
 
         if (ev.press && contains(ev.pos))
         {
@@ -767,7 +777,7 @@ bool GraphWidgetInner::onMouse(const MouseEvent &ev)
 bool GraphWidgetInner::onMotion(const MotionEvent &ev)
 {
     if(mustHideVertices)
-	    return;
+	    return false;
 
     const Point<int> point = wolf::flipY(ev.pos, getHeight());
     GraphNode *hoveredNode = getHoveredNode(point);
