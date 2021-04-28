@@ -6,7 +6,9 @@
 #include "Graph.hpp"
 #include "Margin.hpp"
 #include "Widget.hpp"
-#include "RightClickMenu.hpp"
+#include "MenuWidget.hpp"
+
+#include <array>
 
 START_NAMESPACE_DISTRHO
 
@@ -23,7 +25,7 @@ enum class GraphGradientMode
 
 class GraphWidgetInner : public NanoWidget,
                          public IdleCallback,
-                         public RightClickMenu::Callback
+                         public MenuWidget::Callback
 {
   friend class GraphNode;
   friend class GraphVertex;
@@ -54,6 +56,10 @@ protected:
     waveCurveItem
   };
 
+  // for enabling/disabling menu sections
+  static const int section_index_delete = 0;
+  static const int section_index_curve = 2;
+
   /**
    * DPF stuff
    */
@@ -66,7 +72,15 @@ protected:
 
   void idleCallback() override;
 
-  void rightClickMenuItemSelected(RightClickMenuItem *rightClickMenuItem);
+  /**
+  * callback for when a right click menu item gets selected
+  */
+  void menuItemSelected(const int id) override;
+
+  /**
+  * callback for propaagating mouse events up  from the right click menu
+  */
+  void propagateMouseEvent(const MouseEvent &ev) override;
 
   void onMouseLeave();
 
@@ -221,7 +235,7 @@ private:
 
   float fInput;
 
-  ScopedPointer<RightClickMenu> fRightClickMenu;
+  ScopedPointer<MenuWidget> fRightClickMenu;
   GraphNode *fNodeSelectedByRightClick;
   wolf::CurveType fLastCurveTypeSelected;
 
