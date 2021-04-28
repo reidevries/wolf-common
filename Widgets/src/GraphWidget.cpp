@@ -167,7 +167,7 @@ GraphWidgetInner::GraphWidgetInner(UI *ui, Size<uint> size)
 
     getParentWindow().addIdleCallback(this);
 
-    fRightClickMenu = new RightClickMenu(this);
+    fRightClickMenu = new MenuWidget(this);
 
     fRightClickMenu->addSection("Node");
     fRightClickMenu->addItem(deleteNodeItem, "Delete", "(double L-click)");
@@ -811,17 +811,17 @@ bool GraphWidgetInner::middleClick(const MouseEvent &)
     return false;
 }
 
-void GraphWidgetInner::rightClickMenuItemSelected(RightClickMenuItem *rightClickMenuItem)
+void GraphWidgetInner::menuItemSelected(const int id)
 {
     GraphVertex *vertex = static_cast<GraphVertex *>(fNodeSelectedByRightClick);
 
-    if (rightClickMenuItem->getId() == deleteNodeItem)
+    if (id == deleteNodeItem)
     {
         removeVertex(vertex->getIndex());
     }
     else
     {
-        wolf::CurveType type = (wolf::CurveType)(rightClickMenuItem->getId() - 1);
+        wolf::CurveType type = (wolf::CurveType)(id - 1);
 
         lineEditor.getVertexAtIndex(vertex->getIndex())->setType(type);
         fLastCurveTypeSelected = type;
@@ -829,6 +829,18 @@ void GraphWidgetInner::rightClickMenuItemSelected(RightClickMenuItem *rightClick
         ui->setState("graph", lineEditor.serialize());
         repaint();
     }
+}
+
+void GraphWidgetInner::propagateMouseEvent(const MouseEvent &ev)
+{
+	switch (ev.button) {
+		case 1:
+			mouseLeftDown = ev.press;
+			break;
+		case 3:
+			mouseRightDown = ev.press;
+			break;
+	}
 }
 
 bool GraphWidgetInner::rightClick(const MouseEvent &ev)
@@ -869,22 +881,27 @@ bool GraphWidgetInner::rightClick(const MouseEvent &ev)
             {
                 fNodeSelectedByRightClick = node;
 
-                GraphVertex *vertex = static_cast<GraphVertex *>(node);
-                GraphVertexType vertexType = vertex->getType();
-                const wolf::CurveType curveType = lineEditor.getVertexAtIndex(vertex->getIndex())->getType();
+				// disable certain items depending which kind of vertex selected
+				fRightClickMenu->setAllItemsEnabled(true);
+				const auto vertex_type
+					= dynamic_cast<GraphVertex*>(node)->getType();
+				if (vertex_type != GraphVertexType::Middle) {
+					fRightClickMenu->setItemEnabled(section_index_delete, false);
+					if (vertex_type == GraphVertexType::Right) {
+						fRightClickMenu->setItemEnabled(section_index_curve, false);
+					}
+				}
 
-                const bool mustEnableDelete = vertexType == GraphVertexType::Middle;
-                const bool mustEnableCurveTypeSection = vertexType != GraphVertexType::Right;
-
-                fRightClickMenu->getItemById(deleteNodeItem)->setEnabled(mustEnableDelete);
-                fRightClickMenu->setSectionEnabled(1, mustEnableCurveTypeSection);
-
-                fRightClickMenu->getItemById(singlePowerCurveItem)->setSelected(curveType == wolf::SingleCurve);
-                fRightClickMenu->getItemById(doublePowerCurveItem)->setSelected(curveType == wolf::DoubleCurve);
-                fRightClickMenu->getItemById(stairsCurveItem)->setSelected(curveType == wolf::StairsCurve);
-                fRightClickMenu->getItemById(waveCurveItem)->setSelected(curveType == wolf::WaveCurve);
-
-                fRightClickMenu->show(getAbsoluteX() + ev.pos.getX(), getAbsoluteY() + ev.pos.getY());
+				// get click position and the bounds of this widget
+				auto click_pos = Point<int>(
+					getAbsoluteX() + ev.pos.getX(),
+					getAbsoluteY() + ev.pos.getY()
+				);
+				auto widget_bounds = Rectangle<int>(
+					getAbsoluteX(), getAbsoluteY(),
+					getWidth(), getHeight()
+				);
+				fRightClickMenu->show(click_pos, widget_bounds);
             }
 
             return true;
