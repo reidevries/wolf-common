@@ -108,6 +108,11 @@ void MenuWidget::setItemEnabled(const std::string &name, const bool enabled)
 	if (index > 0) setItemEnabled(index, enabled);
 }
 
+void MenuWidget::setItemSelected(const uint i)
+{
+	selected_i = i;
+}
+
 void MenuWidget::setRegularFontSize(const uint size) noexcept
 {
 	this->font_item_size = size;

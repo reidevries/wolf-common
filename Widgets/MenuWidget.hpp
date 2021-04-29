@@ -76,11 +76,15 @@ public:
 	// obviously this won't work if two items have the same name/id
 	auto findItemIndex(const std::string& name) -> int;
 	auto findItemIndex(const int id) -> int;
+
 	// if you disable an item that's a section header, all the items
 	// until the next section header will be disabled too
 	void setAllItemsEnabled(const bool enabled);
 	void setItemEnabled(const uint index, const bool enabled);
 	void setItemEnabled(const std::string& name, const bool enabled);
+
+	// updates selected_i
+	void setItemSelected(const uint  i);
 
 	void setRegularFontSize(const uint size) noexcept;
 	void setSectionFontSize(const uint size) noexcept;

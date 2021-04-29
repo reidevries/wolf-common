@@ -883,14 +883,21 @@ bool GraphWidgetInner::rightClick(const MouseEvent &ev)
 
 				// disable certain items depending which kind of vertex selected
 				fRightClickMenu->setAllItemsEnabled(true);
-				const auto vertex_type
-					= dynamic_cast<GraphVertex*>(node)->getType();
+				const auto vertex = dynamic_cast<GraphVertex*>(node);
+				const auto vertex_type = vertex->getType();
 				if (vertex_type != GraphVertexType::Middle) {
 					fRightClickMenu->setItemEnabled(section_index_delete, false);
 					if (vertex_type == GraphVertexType::Right) {
 						fRightClickMenu->setItemEnabled(section_index_curve, false);
 					}
 				}
+
+				// set the currently selected curve type in the menu
+				const wolf::CurveType vertex_curve = lineEditor
+					.getVertexAtIndex(vertex->getIndex())
+					->getType();
+				fRightClickMenu->setItemSelected(vertex_curve+3);
+
 
 				// get click position and the bounds of this widget
 				auto click_pos = Point<int>(
