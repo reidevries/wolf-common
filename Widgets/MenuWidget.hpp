@@ -135,7 +135,7 @@ private:
 
 	void updateMaxItemWidth(const Item& item);
 	void adaptSize();
-	auto getItemWidthPx(const Item& item) const -> float;
+	auto getItemWidthPx(const Item& item) -> float;
 	auto getItemBoundsPx(const int index) -> Rectangle<float>;
 };
 

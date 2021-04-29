@@ -8,6 +8,7 @@ MenuWidget::MenuWidget( NanoWidget *widget ) noexcept
 	: WolfWidget(widget),
 	  hover_i(-1),
 	  selected_i(-1),
+	  max_item_w_px(0),
 	  margin(Margin(7,15,7,13)),
 	  font_item_size(17.0f),
 	  font_item_color(255,255,255),
@@ -199,10 +200,13 @@ void MenuWidget::onNanoDisplay()
 
 		// render description if an item has one
 		if (item.description.size() > 0) {
+			Rectangle<float> name_bounds;
+			fontSize(font_item_size);
+			textBounds(0,0, item.name.c_str(), NULL, name_bounds);
+
 			fontSize(font_section_size);
 			fillColor(font_section_color);
-
-			text(item.name.size()*font_item_size + font_section_size,
+			text(name_bounds.getWidth() + font_item_size,
 				 vertical_offset, item.description.c_str(), NULL);
 		}
 
@@ -300,13 +304,23 @@ void MenuWidget::adaptSize()
 	));
 }
 
-auto MenuWidget::getItemWidthPx(const Item& item) const -> float
+auto MenuWidget::getItemWidthPx(const Item& item) -> float
 {
 	if (item.is_section) {
-		return (item.name.size() + item.description.size()) * font_section_size;
+		Rectangle<float> bounds;
+		fontSize(font_section_size);
+		textBounds(0, 0, (item.name + item.description).c_str(), NULL, bounds);
+		return bounds.getWidth();
 	} else {
-		return item.name.size()*font_item_size
-			+ item.description.size()*font_section_size;
+		Rectangle<float> bounds_item, bounds_section;
+		fontSize(font_item_size);
+		textBounds(0,0,item.name.c_str(), NULL, bounds_item);
+		if (item.description.length() > 0)
+		{
+			fontSize(font_section_size);
+			textBounds(0,0,item.description.c_str(), NULL, bounds_section);
+		}
+		return bounds_item.getWidth() + bounds_section.getWidth();
 	}
 }
 
