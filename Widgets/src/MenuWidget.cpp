@@ -10,7 +10,12 @@ MenuWidget::MenuWidget( NanoWidget *widget ) noexcept
 	  selected_i(-1),
 	  margin(Margin(7,15,7,13)),
 	  font_item_size(17.0f),
+	  font_item_color(255,255,255),
+	  font_item_hover_color(0,0,0),
 	  font_section_size(14.0f),
+	  font_section_color(100,100,100),
+	  background_color(39,39,39),
+	  background_hover_color(255,255,255),
 	  border_color(CONFIG_NAMESPACE::right_click_menu_border_color),
 	  callback(nullptr)
 {
@@ -29,8 +34,8 @@ void MenuWidget::show(const Point<int>& click_pos,
 		click_pos.getY() + getHeight()
 	);
 	const auto parent_br = Point<int>(
-		parent_widget_bounds.getX(),
-		parent_widget_bounds.getY()
+		parent_widget_bounds.getX() + parent_widget_bounds.getWidth(),
+		parent_widget_bounds.getY() + parent_widget_bounds.getHeight()
 	);
 	auto show_pos = click_pos;
 	if (menu_br.getX() > parent_br.getX()) show_pos.moveBy(-getWidth(), 0);
@@ -58,16 +63,17 @@ void MenuWidget::clear()
 
 void MenuWidget::addSection(const char* sectionName)
 {
-	items.push_back(Item(sectionName));
+	Item item = Item(sectionName);
+	items.push_back(item);
+	updateMaxItemWidth(item);
 }
 
 void MenuWidget::addItem(int id, const char *label, const char *comment)
 {
 	DISTRHO_SAFE_ASSERT(id >= 0)
-
 	Item item = Item(id, std::string(label), std::string(comment));
-
 	items.push_back(item);
+	updateMaxItemWidth(item);
 }
 
 auto MenuWidget::findItemIndex(const std::string& name) -> int
@@ -154,9 +160,8 @@ void MenuWidget::onNanoDisplay()
 		const bool is_hovered = (static_cast<int>(i) == hover_i);
 
 		// draw highlight background for hovered item
-		if (is_hovered
-			&& !is_section
-			&& is_enabled) {
+		if (is_hovered && !is_section && is_enabled)
+		{
 			beginPath();
 			fillColor(background_hover_color);
 			rect(0, vertical_offset, w - margin.right, font_item_size);
